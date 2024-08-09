@@ -1,0 +1,36 @@
+------------------ start ------------------
+algo_name : DDPG
+env_name : UE4 and Airsim
+seed : 0
+n_state : 42
+n_state_so : 32
+n_state_sg : 2
+n_action : 3
+n_sub_action : 1
+update_times : 1
+train_eps : 1200
+test_eps : 100
+max_step : 300
+gamma : 0.98
+critic_lr : 0.001
+actor_lr : 0.0001
+vae_lr : 0.0001
+memory_capacity : 131072
+batch_size : 256
+soft_tau : 0.01
+policy_delay : 2
+policy_noise : 0.2
+noise_clip : 0.5
+result_path : E:\single_uav_ddpg/outputs/UE4 and Airsim/20240619-120402/results/
+model_path : E:\single_uav_ddpg/outputs/UE4 and Airsim/20240619-120402/models/
+save_fig : True
+device : cuda:0
+total_time : 7.40hr
+success_rate : 0.685
+collision_rate : 0.272
+outside_rate : 0.043
+env1 0.96 0.04 39 steps
+env2 0.95 0.05 41 steps
+env3 0.98 0.02 41 steps
+dense 0.85 0.15 42 steps
+------------------- end -------------------
