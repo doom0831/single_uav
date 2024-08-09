@@ -1,0 +1,50 @@
+------------------ start ------------------
+algo_name : DDPG
+env_name : UE4 and Airsim
+seed : 0
+n_state : 42
+n_state_so : 32
+n_state_sg : 2
+n_action : 3
+n_sub_action : 1
+update_times : 1
+train_eps : 1200
+test_eps : 100
+max_step : 300
+gamma : 0.98
+critic_lr : 0.001
+actor_lr : 0.0001
+vae_lr : 0.0001
+memory_capacity : 131072
+batch_size : 256
+soft_tau : 0.01
+policy_delay : 2
+policy_noise : 0.2
+noise_clip : 0.5
+grad_accumulation_steps : 1
+result_path : E:\single_uav_ddpg/outputs/UE4 and Airsim/20240519-020649/results/
+model_path : E:\single_uav_ddpg/outputs/UE4 and Airsim/20240519-020649/models/
+save_fig : True
+device : cuda:0
+total_time : 8.61hr
+success_rate : 0.613
+collision_rate : 0.307
+outside_rate : 0.080
+no dropout mseloss random startpoint change ounoise
+env1 0.97 0.03 43 steps
+env2 0.98 0.02 40 steps
+env3 0.99 0.01 41 steps
+moving target 0.57 0.21 0.22 45 steps
+moving target one way 0.57 0.26 0.17 87 steps x 84 85, y 10 11
+moving target two way 0.58 0.28 0.14 97 steps
+moving target four way 0.51 0.25 0.24 85 steps
+left one 0.87 0.12 0.01 74 steps
+right one 0.86 0.04 0.1 79 steps
+left two 0.37 0.09 0.54 85 steps
+right two 0.25 0.58 0.17 106 steps
+dense env 0.77 0.23 40 steps
+one high obstacle 0.54 0.27 0.19 81 steps
+latetcy time depth(0.58193) - vae(0.54692) = 0.035s->35.01ms
+latetcy time vae(0.54692) - sddpgex(0.54142) = 0.0055s->5.5ms
+city env 0.54 0.46 42 steps
+------------------- end -------------------
