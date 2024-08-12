@@ -14,8 +14,8 @@ from utils import save_results_test, plot_rewards_test, make_dir, save_args_test
 def test(cfg, client, agent):
     print('Start testing')
     print(f'Env:{cfg.env_name}, Algorithm:{cfg.algo_name}, Device:{cfg.device}')
-    rewards = []  # 记录所有回合的奖励
-    ma_rewards = []  # 记录所有回合的滑动平均奖励
+    rewards = []  # 紀錄所有回合的奖励
+    ma_rewards = []  # 紀錄所有回合的移動平均奖励
     writer = SummaryWriter('./test_image')
     image_idx = 0
     success = 0
@@ -31,12 +31,8 @@ def test(cfg, client, agent):
         for i_step in range(cfg.max_step):
             finish_step = finish_step + 1
             action_ao = agent.choose_action(state[8:])
-            # action_ao = torch.from_numpy(action_ao)
             action_ag = agent.choose_action(np.array([state[3], state[7]]))
-            # action_ag = agent.choose_action(state[[3, 7]])
-            # action_ag = torch.from_numpy(action_ag)
             combine_state = np.concatenate([state, action_ao, action_ag])
-            # combine_state = torch.cat([state, action_ao, action_ag], dim=0)
             # action = agent.choose_action(state)
             action = agent.choose_action(combine_state)
             next_state, reward, done, collision = env.step(action)
@@ -91,9 +87,6 @@ def test(cfg, client, agent):
     return rewards, ma_rewards, success_rate, collision_rate, outside_rate, avg_step
 
 
-# 0.63 原目标点
-# 0.43 相反的固定区域目标点
-# 0.58 全地图
 if __name__ == '__main__':
     cfg = get_args()
     set_seed(cfg.seed)
@@ -105,4 +98,4 @@ if __name__ == '__main__':
     rewards, ma_rewards, success_rate, collision_rate, outside_rate, avg_step = test(cfg, client, agent)
     save_args_test(cfg, success_rate, collision_rate, outside_rate, avg_step)
     save_results_test(rewards, ma_rewards, tag='test', path=cfg.result_path)
-    plot_rewards_test(rewards, ma_rewards, cfg, tag="test")  # 画出结果
+    plot_rewards_test(rewards, ma_rewards, cfg, tag="test")  # 畫出结果
