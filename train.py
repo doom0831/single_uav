@@ -30,7 +30,6 @@ def get_args():
     curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # Obtain current time
     # curr_time = "20220728-131136"
     curr_time = "20240519-020649_best"
-    # pretrain_path = "20240416-234831"
     parser = argparse.ArgumentParser(description="hyper parameters")
     parser.add_argument('--algo_name', default='DDPG', type=str, help="name of algorithm")
     parser.add_argument('--env_name', default='UE4 and Airsim', type=str, help="name of environment")
@@ -58,8 +57,6 @@ def get_args():
                                                  '/' + "DDPG_test" + '/results/')
     parser.add_argument('--model_path', default=curr_path + "/outputs/" + parser.parse_args().env_name + \
                                                 '/' + curr_time + '/models/')  # path to save models
-    # parser.add_argument('--pretrain_model', default=curr_path + "/outputs/" + parser.parse_args().env_name + \
-    #                                             '/' + pretrain_path + '/models/')  # path to load models
     parser.add_argument('--save_fig', default=True, type=bool, help="if save figure or not")
     args = parser.parse_args()
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # check GPU
@@ -79,7 +76,6 @@ def set_seed(seed):
 def train(cfg, client, agent):
     print('Start training!')
     print(f'Env:{cfg.env_name}, Algorithm:{cfg.algo_name}, Device:{cfg.device}')
-    # ou_noise = OUNoise(mu=np.zeros(cfg.n_action), decay_period=cfg.max_step * 0.5)  # noise of action
     ou_noise = OUNoise(mu=np.zeros(cfg.n_action))  # noise of action
     rewards, ma_rewards, loss = [], [], []
     image_buffer = []
@@ -106,13 +102,9 @@ def train(cfg, client, agent):
             finish_step = finish_step + 1
             # 分別處理ao和ag的動作
             action_ao = agent.choose_action(state[8:])
-            # action_ao = torch.from_numpy(action_ao)
-            # action_ag = agent.choose_action(state[[3, 7]])
-            # action_ag = torch.from_numpy(action_ag)
             action_ag = agent.choose_action(np.array([state[3], state[7]]))
             # 把ao和ag以及總狀態資訊做合併
             combine_state = np.concatenate([state, action_ao, action_ag])
-            # combine_state = torch.cat([state, action_ao, action_ag], dim=0)
             action = agent.choose_action(combine_state)
             # action = agent.choose_action(state)
             action = action + ou_noise(i_step)  # 动作加噪声 OU噪声最大不会超过0.3
@@ -122,12 +114,8 @@ def train(cfg, client, agent):
             action = np.clip(action, -1, 1)  # 裁剪
             next_state, reward, done, collision = env.step(action)
             action_ao_next = agent.choose_action(next_state[8:])
-            # action_ao_next = torch.from_numpy(action_ao_next)
             action_ag_next = agent.choose_action(np.array([next_state[3], next_state[7]]))
-            # action_ag_next = agent.choose_action(next_state[[3, 7]])
-            # action_ag_next = torch.from_numpy(action_ag_next)
             combine_state_next = np.concatenate([next_state, action_ao_next, action_ag_next])
-            # combine_state_next = torch.cat([next_state, action_ao_next, action_ag_next], dim=0)
             ep_reward += reward
             # agent.memory.push(state, action, reward, next_state, done)
             agent.memory.push(combine_state, action, reward, combine_state_next, done)
@@ -164,6 +152,7 @@ def train(cfg, client, agent):
             final_distance = state[3] * env.init_distance
             if done:
                 break
+        
         cumulative_reward += ep_reward
         total_step += finish_step
         # ε = max(ε - 0.002, 0.001)
@@ -222,7 +211,6 @@ if __name__ == '__main__':
     client = airsim.MultirotorClient()  # connect to the AirSim simulator
     agent = DDPG(cfg)
     vae_model = VAE()
-    # agent.load_pretrain(path=cfg.pretrain_model)
     rewards, ma_rewards, success_rate, total_time, collision_rate, outside_rate, loss = train(cfg, client, agent)
     save_args(cfg, success_rate, total_time, collision_rate, outside_rate)
     save_results(rewards, ma_rewards, tag='train', path=cfg.result_path)
