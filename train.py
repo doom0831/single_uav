@@ -62,16 +62,12 @@ def get_args():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # check GPU
     return args
 
-
 def set_seed(seed):
-    """
-    全局生效
-    """
+
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-
 
 def train(cfg, client, agent):
     print('Start training!')
@@ -214,5 +210,5 @@ if __name__ == '__main__':
     rewards, ma_rewards, success_rate, total_time, collision_rate, outside_rate, loss = train(cfg, client, agent)
     save_args(cfg, success_rate, total_time, collision_rate, outside_rate)
     save_results(rewards, ma_rewards, tag='train', path=cfg.result_path)
-    plot_rewards(rewards, ma_rewards, cfg, tag="train")  # 画出结果
-    plot_losses(loss, cfg, tag="train")  # 画出结果
+    plot_rewards(rewards, ma_rewards, cfg, tag="train")  # 畫出结果
+    plot_losses(loss, cfg, tag="train")  # 畫出结果
