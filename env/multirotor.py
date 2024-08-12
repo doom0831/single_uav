@@ -27,7 +27,6 @@ matplotlib.use('TkAgg')
 
 def normal_func(x):
     y = 1 / (1 + math.exp(-x * 2.4)) - 0.5
-    # y = - (1 / (1 + math.exp(-x / 30)) - 0.5)
     return y
 
 pretrained_resource = "E:/single_uav_ddpg/ZoeDepth/results/0422_RGB_best.pt"
@@ -63,7 +62,7 @@ class Multirotor:
         client.enableApiControl(True)  # 获取控制权
         client.armDisarm(True)  # 解锁py
         # client.takeoffAsync().join()  # 起飞
-        # self.client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0, start_y, 0), airsim.to_quaternion(0, 0, 0)), True)
+        # self.client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0, start_y, 0), airsim.to_quaternion(0, 0, 0)), True) #起飛時隨機生成位置
         client.takeoffAsync()
         client.moveToZAsync(-5, 5).join()
 
@@ -72,22 +71,11 @@ class Multirotor:
         self.bound_x = [-110, 110]
         self.bound_y = [-50, 50]
         self.bound_z = [-20, 0]
-        # self.target_x = [-350, -150]
-        # self.target_y = [250, 450]
-        # self.target_z = [-100, -50]
         self.target_x = [100, 100]
         self.target_y = [-15, 15]
         self.target_z = [-10, -10]
         self.d_safe = 25
         #測試目標追蹤
-        # self.targets = [
-        #     {"x": 100, "y": 0, "z": -10},
-        #     {"x": 87.5, "y": 14.75, "z": -10},
-        #     {"x": 82.25, "y": -14.75, "z": -10},
-        #     {"x": 65.5, "y": 10.25, "z": -10},
-        #     {"x": 62.25, "y": -10.25, "z": -10},
-
-        # ]
         # self.targets_groups = [
         #     # [   #右1
         #     #     {"x": 100.12354, "y": 12.5645654, "z": -10},
@@ -260,6 +248,7 @@ class Multirotor:
         return data
 
     def get_depth_image_data(self):
+        #以RGB圖像當作輸入
         response = self.client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])[0]
         if response.image_data_uint8 is None or len(response.image_data_uint8) == 0:
             print(" Image data is empty, use default image")
@@ -269,6 +258,7 @@ class Multirotor:
             img_2d = img_1d.reshape(response.height, response.width, 3)
         img_normailized = img_2d.astype(np.float32) / 255.0
         img_tensor = torch.from_numpy(img_normailized).permute(2, 0, 1).unsqueeze(0).to(self.device)
+        #以深度圖當作輸入
         # response = self.client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.DepthPerspective, True, False)])[0]
         # img_2d = airsim.list_to_2d_float_array(response.image_data_float, response.width, response.height)
         
@@ -392,7 +382,6 @@ class Multirotor:
 
         kinematic_state = self.client.simGetGroundTruthKinematics()
         distance_reward = self.distance_reward(kinematic_state.position.x_val, kinematic_state.position.y_val, kinematic_state.position.z_val)
-        # distance_reward = self.distance_reward(self.ux, self.uy, self.uz)
         # reward = arrive_reward + yaw_reward  + min_sensor_reward + collision_reward + step_reward + distance_reward + cross_border_reward + z_distance_reward
         reward = arrive_reward + yaw_reward + collision_reward + step_reward + distance_reward + cross_border_reward + z_distance_reward + depth_image_reward
         
@@ -504,26 +493,8 @@ class Multirotor:
         d_min = min(depth_image_distance)
         if d_min < self.d_safe:
             return 0.5 * (math.exp((self.d_safe - d_min) / -5) - 1)
-            # return -max(0, (self.d_safe - d_min) / self.d_safe)
-            # return -0.05 * (self.d_safe - d_min)
         else:
             return 0
-        # img_tensor = self.get_depth_image_data()
-        # depth_estimation = self.zoedepth_model(img_tensor)['metric_depth']
-        # depth_estimation_resize = F.interpolate(depth_estimation, size=(144, 256), mode='bilinear', align_corners=False)
-        # depth_estimation_resize = torch.clamp(depth_estimation_resize, 0, 100) / 100.0
-        # depth_map, _, _ = self.vae(depth_estimation_resize)
-        # depth_map = depth_map.detach().cpu().numpy().squeeze()
-        
-        # N = depth_map.mean()
-        # H, W = depth_map.shape[-2:]
-        # center_region = depth_map[H//2-32:H//2+32, W//2-32:W//2+32]
-        # M = center_region.mean()
-        # if M > N:
-        #     reward = 0
-        # else:
-        #     reward = -0.2
-        # return reward
 
 
     '''
