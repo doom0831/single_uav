@@ -62,12 +62,16 @@ def get_args():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # check GPU
     return args
 
-def set_seed(seed):
 
+def set_seed(seed):
+    """
+    全局生效
+    """
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
 
 def train(cfg, client, agent):
     print('Start training!')
@@ -133,7 +137,7 @@ def train(cfg, client, agent):
             #     image_buffer = []
             #     vae_model.save(path=cfg.model_path, filename='vae_ck.pt')
 
-            # env.get_image_data(cfg.result_path, image_idx)
+            # env.get_data(cfg.result_path, image_idx)
             # image_idx += 1
 
             replay_len = len(agent.memory)

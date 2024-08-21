@@ -39,7 +39,7 @@ def test(cfg, client, agent):
             ep_reward += reward
             state = next_state
 
-            # env.get_image_data(cfg.result_path, image_idx)
+            # env.get_data(cfg.result_path, image_idx)
             # image_idx += 1
 
             # img_tensor = env.get_depth_image_data()

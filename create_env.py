@@ -3,24 +3,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# def load_positions(filename='drone_positions1.csv'):
-#     positions = []
-#     with open(filename, mode='r') as file:
-#         reader = csv.reader(file)
-#         for row in reader:
-#             y, x = map(float, row)
-#             positions.append((y, x))
-#     return positions
-
-path1 = 'position_record/drone_positions_best_env4v3.csv'
+path1 = 'position_record/drone_positions_best_env1.csv'
 path2 = 'position_record/drone_positions_sddpg_env4v3.csv'
 path3 = 'position_record/drone_positions_ddpg_env2.csv'
 path4 = 'position_record/moving_target.csv'
+path5 = 'position_record/drone_positions_best_env1_expand.csv'
 
 method1_df = pd.read_csv(path1)
 method2_df = pd.read_csv(path2)
 method3_df = pd.read_csv(path3)
 method4_df = pd.read_csv(path4)
+method5_df = pd.read_csv(path5)
 
 def plot_environment1():
     fig, ax = plt.subplots()
@@ -49,10 +42,11 @@ def plot_environment1():
     ax.add_patch(patches.Rectangle((-20, 90), 40, 10, edgecolor='red', facecolor='red'))
 
     # Draw the drone path
-    ax.plot(method3_df['y'], method3_df['x'], label=f'DDPG: {len(method3_df)} steps', marker='o', color='purple', markersize=3, linestyle='-', linewidth=2)
-    ax.plot(method2_df['y'], method2_df['x'], label=f'Base: {len(method2_df)} steps', marker='o', color='orange', markersize=3, linestyle='-', linewidth=2)
+    # ax.plot(method3_df['y'], method3_df['x'], label=f'DDPG: {len(method3_df)} steps', marker='o', color='purple', markersize=3, linestyle='-', linewidth=2)
+    # ax.plot(method2_df['y'], method2_df['x'], label=f'Base: {len(method2_df)} steps', marker='o', color='orange', markersize=3, linestyle='-', linewidth=2)
+    ax.plot(method5_df['y'], method5_df['x'], label=f'Ours EX: {len(method5_df)} steps', marker='o', color='orange', markersize=3, linestyle='-', linewidth=2)
     ax.plot(method1_df['y'], method1_df['x'], label=f'Ours: {len(method1_df)} steps', marker='o', color='blue', markersize=3, linestyle='-', linewidth=2)
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=8)
 
     ax.set_xlim(-50, 50)
     ax.set_ylim(0, 100)
@@ -61,7 +55,7 @@ def plot_environment1():
 
     plt.xlabel('X axis (meters)')
     plt.ylabel('Y axis (meters)')
-    plt.title('2D Visualization of the Environment 1')
+    plt.title('2D Visualization of the Expand Environment 1')
     # plt.legend()
     plt.show()
 
@@ -253,5 +247,5 @@ def plot_mtenvironment():
     plt.show()
 
 
-plot_mtenvironment()
+plot_environment1()
 
