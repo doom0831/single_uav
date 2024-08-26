@@ -1,0 +1,88 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "CameraDefaults": {
+    "CaptureSettings": [
+      {
+        "ImageType": 0,
+        "Width": 256,
+        "Height": 144,
+        "FOV_Degrees": 90
+      }
+    ]
+  },
+  "Vehicles": {
+		"UAV1": {
+		  "VehicleType": "SimpleFlight",
+		  "X": 0, "Y": 0, "Z": 0,
+      "Sensors": {
+        "DistanceS": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY1": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 30, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY2": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": -30, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY3": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 60, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY4": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": -60, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY5": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 90, "Pitch": 0, "Roll": 0
+        },
+        "DistanceY6": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": -90, "Pitch": 0, "Roll": 0
+        },
+        "DistanceP1": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": 30, "Roll": 0
+        },
+        "DistanceP2": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": -30, "Roll": 0
+        },
+        "DistanceP3": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": 60, "Roll": 0
+        },
+        "DistanceP4": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": -60, "Roll": 0
+        },
+        "DistanceP5": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": 90, "Roll": 0
+        },
+        "DistanceP6": {
+          "SensorType": 5,
+          "Enabled": true,
+          "Yaw": 0, "Pitch": -90, "Roll": 0
+        }
+      }
+    }
+	}
+}
