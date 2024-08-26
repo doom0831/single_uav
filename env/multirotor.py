@@ -62,7 +62,7 @@ class Multirotor:
         client.enableApiControl(True)  # 获取控制权
         client.armDisarm(True)  # 解锁py
         # client.takeoffAsync().join()  # 起飞
-        # self.client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0, start_y, 0), airsim.to_quaternion(0, 0, 0)), True) #起飛時隨機生成位置
+        # self.client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0, start_y, 0), airsim.to_quaternion(0, 0, 0)), True) #訓練時要開啟，起飛時隨機生成位置
         client.takeoffAsync()
         client.moveToZAsync(-5, 5).join()
 
@@ -75,6 +75,7 @@ class Multirotor:
         self.target_y = [-15, 15]
         self.target_z = [-10, -10]
         self.d_safe = 25
+        
         #測試目標追蹤
         # self.targets_groups = [
         #     # [   #右1
@@ -113,7 +114,6 @@ class Multirotor:
         # 目标点坐标
         self.tx, self.ty, self.tz = self.generate_target()
         # self.tx, self.ty, self.tz = self.get_next_target()
-        # self.tx, self.ty, self.tz = 85, 10, -10
         print("target:", self.tx, self.ty, self.tz)
         self.init_distance = self.get_distance()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -143,10 +143,10 @@ class Multirotor:
         tz = np.random.rand() * (self.target_z[1] - self.target_z[0]) + self.target_z[0]
         return tx, ty, tz
     
-    def save_position(self, uy, ux, filename='drone_positions_best_env4.csv'):
-        with open(filename, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([uy, ux])
+    # def save_position(self, uy, ux, filename='drone_positions_best_env1_expand.csv'):
+    #     with open(filename, mode='a', newline='') as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow([uy, ux])
               
     '''
     獲取無人機位置、速度
@@ -217,6 +217,7 @@ class Multirotor:
     '''
     返回深度图数据(numpy.array)
     '''
+
     def extract_region_avg_depth(self, img, center, h, w):
         row_start = max(center[0] - h // 2, 0)
         row_end = min(center[0] + h // 2, img.shape[0])
@@ -229,6 +230,10 @@ class Multirotor:
         
         return np.nanmean(region)
     
+    '''
+    從深度圖中提取16個區域的平均深度，用來做後續Reward的計算
+    '''
+
     def depth_image_data(self):
         data = []
         response = self.client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.DepthPerspective, True, False)])[0]
@@ -247,7 +252,7 @@ class Multirotor:
         
         return data
 
-    def get_depth_image_data(self):
+    def get_image_data(self):
         #以RGB圖像當作輸入
         response = self.client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])[0]
         if response.image_data_uint8 is None or len(response.image_data_uint8) == 0:
@@ -268,13 +273,12 @@ class Multirotor:
         
         # img_2d = np.clip(img_2d, 0, 100) / 100.0
         
-        # print(' img_2d: ', img_2d.shape)
         # img_tensor = torch.from_numpy(img_2d).unsqueeze(0).unsqueeze(0).to(self.device).float()
         
         # plt.imshow(img_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy())
         # plt.show()
         
-
+        #可視化框選範圍，有需要在查看就好
         # def draw_region(center, height, width, color='r'):
         #     rect = patches.Rectangle((center[1] - width // 2, center[0] - height // 2), width, height, linewidth=1, edgecolor=color, facecolor='none')
         #     plt.gca().add_patch(rect)
@@ -288,14 +292,13 @@ class Multirotor:
     返回无人机状态(numpy.array)
     '''
     def get_state(self):
-        # 进行归一化
         position = np.array([self.tx - self.ux, self.ty - self.uy, self.tz - self.uz])
         target = np.array([self.get_distance() / self.init_distance])
         velocity = np.array([self.vx, self.vy, self.vz])
         angle = np.array([self.get_deflection_angle() / 180])
         # sensor_data = np.array(self.get_distance_sensors_data()) / 20
         # depth_image_data = np.array(self.depth_image_data()) / 50
-        img_tensor = self.get_depth_image_data()
+        img_tensor = self.get_image_data()
         
         with torch.no_grad():
             depth_estimation = self.zoedepth_model(img_tensor)['metric_depth']
@@ -325,7 +328,6 @@ class Multirotor:
     '''
     # 碰撞惩罚要略大于目标点惩罚
     def step(self, action):
-        # start_time = time.time()
         done = self.if_done()
         #更新目標點
         # if self.steps % 10 == 0:
@@ -378,7 +380,7 @@ class Multirotor:
                                         vz=self.vz + az,
                                         duration=0.5,
                                         drivetrain=airsim.DrivetrainType.ForwardOnly,
-                                        yaw_mode=my_yaw_mode)
+                                        yaw_mode=my_yaw_mode).join() #如果要讓動作不卡頓把.join()拿掉，然後加上後面的time.sleep(0.15)
 
         kinematic_state = self.client.simGetGroundTruthKinematics()
         distance_reward = self.distance_reward(kinematic_state.position.x_val, kinematic_state.position.y_val, kinematic_state.position.z_val)
@@ -387,11 +389,7 @@ class Multirotor:
         
         self.ux, self.uy, self.uz, self.vx, self.vy, self.vz = self.get_kinematic_state()
         next_state = self.get_state()
-        time.sleep(0.15)
-
-        # end_time = time.time()
-        # processing_time = end_time - start_time
-        # print(f" Processing time: {processing_time:.4f}s")
+        # time.sleep(0.15)
         
         return next_state, reward, done, collision_times
 
@@ -405,9 +403,6 @@ class Multirotor:
                 self.uy < self.bound_y[0] or self.uy > self.bound_y[1] or \
                 self.uz < self.bound_z[0]:
             return True
-        # # 超过目標最大距离
-        # if self.get_distance() > 105.0:
-        #     return True
 
         return False
 
@@ -512,10 +507,13 @@ class Multirotor:
 
     def step_reward(self):
         if not self.if_done():
-            # return -0.02
             return -0.2
         else:
             return 0
+        
+    '''
+    把當下看到的圖片存起來，可當作之後的資料集來訓練模型
+    '''
 
     # def save_image(self, image_data, folder, idx, cmap=None):
     #     if cmap is None:
@@ -524,7 +522,7 @@ class Multirotor:
     #     else:
     #         plt.imsave(os.path.join(folder, f'image_{idx}.png'), image_data, cmap=cmap)
     
-    # def get_image_data(self, save_dir, image_idx=0):
+    # def get_data(self, save_dir, image_idx=0):
     #     # os.makedirs(os.path.join(save_dir, 'RGB'), exist_ok=True)
     #     # os.makedirs(os.path.join(save_dir, 'Depth'), exist_ok=True)
     #     # os.makedirs(os.path.join(save_dir, 'DepthValues'), exist_ok=True)
@@ -574,7 +572,7 @@ class Multirotor:
     #     #     f.write(f"{camera_info['orientation']['y']} ")
     #     #     f.write(f"{camera_info['orientation']['z']}")
 
-    #     img_tensor = self.get_depth_image_data()
+    #     img_tensor = self.get_image_data()
     #     depth_estimation = self.zoedepth_model(img_tensor)['metric_depth']
     #     depth_estimation_resize = F.interpolate(depth_estimation, size=(144, 256), mode='bilinear', align_corners=False)
     #     depth_estimation_resize = torch.clamp(depth_estimation_resize, 0, 100) / 100.0
